@@ -1,0 +1,33 @@
+// server.js
+const express = require('express');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const cors = require('cors');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// Endpoint pour créer un paiement
+app.post('/create-payment-intent', async (req, res) => {
+    try {
+        const { amount } = req.body;
+
+        // Créez une intention de paiement avec Stripe
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount,
+            currency: 'usd', // ou 'eur', selon la devise souhaitée
+            payment_method_types: ['card'],
+        });
+
+        res.status(200).json({
+            clientSecret: paymentIntent.client_secret,
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
